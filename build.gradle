@@ -1,0 +1,36 @@
+plugins {
+	id 'java'
+}
+
+group = 'io.gridbug'
+version = '0.0.1-SNAPSHOT'
+description = 'Demo project for Spring Boot'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        credentials {
+            username "$gemfireRepoUsername"
+            password "$gemfireRepoPassword"
+        }
+        url = uri("https://packages.broadcom.com/artifactory/gemfire/")
+    }
+}
+
+dependencies {
+	implementation "com.vmware.gemfire:gemfire-core:10.1.5"
+	implementation 'com.drewnoakes:metadata-extractor:2.19.0'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
