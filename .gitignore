@@ -1,3 +1,5 @@
 build/
 gradle.properties
 osm-20151130-0.002-2.bin
+libs/
+.gradle

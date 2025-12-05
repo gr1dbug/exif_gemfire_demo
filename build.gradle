@@ -25,6 +25,7 @@ repositories {
 
 dependencies {
 	implementation "com.vmware.gemfire:gemfire-core:10.1.5"
+	implementation "com.vmware.gemfire:gemfire-cq:10.1.5"
 	implementation 'com.drewnoakes:metadata-extractor:2.19.0'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
