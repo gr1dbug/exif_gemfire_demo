@@ -69,13 +69,14 @@ public class Ingest {
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(file);
 
+            String fileId = file.getName();
             com.drew.metadata.exif.ExifIFD0Directory exifDirectory = metadata
                     .getFirstDirectoryOfType(com.drew.metadata.exif.ExifIFD0Directory.class);
             com.drew.metadata.exif.GpsDirectory gpsDirectory = metadata
                     .getFirstDirectoryOfType(com.drew.metadata.exif.GpsDirectory.class);
 
             PhotoExifData exifData = new PhotoExifData();
-            exifData.setId(file.getName());
+            exifData.setId(fileId);
 
             if (exifDirectory != null) {
                 exifData.setMake(exifDirectory.getString(com.drew.metadata.exif.ExifIFD0Directory.TAG_MAKE));
@@ -118,7 +119,7 @@ public class Ingest {
                         gpsDirectory.getString(com.drew.metadata.exif.GpsDirectory.TAG_ALTITUDE_REF));
             }
 
-            System.out.println("Processing file: " + file.getName());
+            System.out.println("Processing file: " + fileId);
             System.out.println("Extracted PhotoExifData:");
             System.out.println(exifData);
             region.put(exifData.getId(), exifData);
