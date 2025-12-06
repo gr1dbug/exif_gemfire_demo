@@ -31,27 +31,42 @@ public class Ingest {
                 .create("PhotoExifData");
 
         if (args.length == 0) {
-            System.out.println("Please provide a filename as an argument.");
+            System.out.println("Please provide a directory as an argument.");
             return;
         }
 
-        String filename = args[0];
-        File file = new File(filename);
+        String directoryName = args[0];
+        File directory = new File(directoryName);
 
-        if (!file.exists()) {
-            System.err.println("File not found: " + filename);
+        if (!directory.exists() || !directory.isDirectory()) {
+            System.err.println("Directory not found or is not a directory: " + directoryName);
             return;
         }
 
-        if (!isImageFile(file)) {
-            System.err.println("File is not a JPG or PNG: " + filename);
+        File[] files = directory.listFiles();
+        if (files == null) {
+            System.err.println("Failed to list files in directory: " + directoryName);
             return;
         }
 
+        ReverseGeocoder reverseGeocoder;
         try {
-            ReverseGeocoder reverseGeocoder = new ReverseGeocoder(
-                    "/home/craig/tanzu/gemfire/apps/exif_gemfire/osm-20151130-0.002-2.bin");
+            reverseGeocoder = new ReverseGeocoder(
+                    "/home/craig/tanzu/gemfire/apps/exif_gemfire_demo/osm-20151130-0.002-2.bin");
+        } catch (IOException e) {
+            System.err.println("Error initializing ReverseGeocoder: " + e.getMessage());
+            return;
+        }
 
+        for (File file : files) {
+            if (isJpeg(file)) {
+                processFile(file, region, reverseGeocoder);
+            }
+        }
+    }
+
+    private static void processFile(File file, Region<String, PhotoExifData> region, ReverseGeocoder reverseGeocoder) {
+        try {
             Metadata metadata = ImageMetadataReader.readMetadata(file);
 
             com.drew.metadata.exif.ExifIFD0Directory exifDirectory = metadata
@@ -60,7 +75,7 @@ public class Ingest {
                     .getFirstDirectoryOfType(com.drew.metadata.exif.GpsDirectory.class);
 
             PhotoExifData exifData = new PhotoExifData();
-            exifData.setId(filename);
+            exifData.setId(file.getName());
 
             if (exifDirectory != null) {
                 exifData.setMake(exifDirectory.getString(com.drew.metadata.exif.ExifIFD0Directory.TAG_MAKE));
@@ -103,18 +118,19 @@ public class Ingest {
                         gpsDirectory.getString(com.drew.metadata.exif.GpsDirectory.TAG_ALTITUDE_REF));
             }
 
+            System.out.println("Processing file: " + file.getName());
             System.out.println("Extracted PhotoExifData:");
             System.out.println(exifData);
             region.put(exifData.getId(), exifData);
 
         } catch (ImageProcessingException | IOException e) {
-            System.err.println("Error reading metadata: " + e.getMessage());
+            System.err.println("Error reading metadata for file " + file.getName() + ": " + e.getMessage());
         }
     }
 
-    private static boolean isImageFile(File file) {
+    private static boolean isJpeg(File file) {
         String name = file.getName().toLowerCase();
-        return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png");
+        return name.endsWith(".jpg") || name.endsWith(".jpeg");
     }
 
 }
